@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIOps Traffic Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { font-size: 1.4rem; color: #e2e8f0; }
+        .header .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-healthy { background: #166534; color: #4ade80; }
+        .status-error { background: #7f1d1d; color: #f87171; }
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        .card.full-width { grid-column: 1 / -1; }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 0.3rem;
+        }
+        .btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        .btn:active { transform: translateY(0); }
+        .btn-red { background: #dc2626; color: white; }
+        .btn-orange { background: #ea580c; color: white; }
+        .btn-yellow { background: #ca8a04; color: white; }
+        .btn-blue { background: #2563eb; color: white; }
+        .btn-green { background: #16a34a; color: white; }
+        .btn-purple { background: #7c3aed; color: white; }
+        .btn-gray { background: #475569; color: white; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .error-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 0.4rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+        .log-container {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1rem;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .log-entry { padding: 0.15rem 0; }
+        .log-entry.error { color: #f87171; }
+        .log-entry.success { color: #4ade80; }
+        .log-entry.info { color: #c8cdd3; }
+        .log-entry.warn { color: #fbbf24; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .stat-box {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #c8cdd3;
+        }
+        .stat-box .label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+        .stat-box.errors .value { color: #f87171; }
+        .stat-box.success .value { color: #4ade80; }
+        .traffic-controls { display: flex; gap: 0.5rem; align-items: flex-end; }
+        .traffic-controls .form-group { flex: 1; margin-bottom: 0; }
+        .indicator {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .indicator.on { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .indicator.off { background: #475569; }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AIOps Traffic Simulator</h1>
+        <span class="status-badge status-healthy" id="appStatus">HEALTHY</span>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="value" id="statTotal">0</div>
+                <div class="label">Total Requests</div>
+            </div>
+            <div class="stat-box success">
+                <div class="value" id="statSuccess">0</div>
+                <div class="label">Success</div>
+            </div>
+            <div class="stat-box errors">
+                <div class="value" id="statErrors">0</div>
+                <div class="label">Errors</div>
+            </div>
+            <div class="stat-box">
+                <div class="value" id="statRps">0</div>
+                <div class="label">Target RPS</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Error Simulation -->
+            <div class="card">
+                <h2>Error Simulation</h2>
+                <p style="color:#64748b; font-size:0.85rem; margin-bottom:1rem;">Trigger intentional errors for alerting and observability testing.</p>
+                <div class="error-buttons">
+                    <button class="btn btn-red" onclick="triggerError('/api/error/500')">500 Error</button>
+                    <button class="btn btn-orange" onclick="triggerError('/api/error/timeout?seconds=10')">Timeout (10s)</button>
+                    <button class="btn btn-red" onclick="triggerError('/api/error/crash')">App Crash</button>
+                    <button class="btn btn-yellow" onclick="triggerError('/api/error/cascade?count=5')">Error Cascade</button>
+                </div>
+                <div style="margin-top:1rem;">
+                    <label style="font-size:0.85rem; color:#94a3b8;">Memory Allocation (MB):</label>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
+                        <input type="number" id="oomMb" value="100" min="1" max="2048"
+                               style="width:100px; padding:0.4rem; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#e2e8f0;">
+                        <button class="btn btn-orange btn-sm" onclick="triggerOom()">Allocate Memory</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU Stress -->
+            <div class="card">
+                <h2>Resource Stress</h2>
+                <p style="color:#64748b; font-size:0.85rem; margin-bottom:1rem;">Stress CPU/memory to trigger HPA autoscaling.</p>
+                <div class="form-group">
+                    <label>CPU Burn Duration (seconds)</label>
+                    <input type="number" id="cpuSeconds" value="10" min="1" max="300">
+                </div>
+                <button class="btn btn-purple" onclick="stressCpu()">Burn CPU</button>
+                <p id="cpuStatus" style="margin-top:0.8rem; font-size:0.85rem; color:#64748b;"></p>
+            </div>
+
+            <!-- Traffic Generator -->
+            <div class="card full-width">
+                <h2>
+                    <span class="indicator off" id="trafficIndicator"></span>
+                    Traffic Generator
+                </h2>
+                <p style="color:#64748b; font-size:0.85rem; margin-bottom:1rem;">
+                    Generate sustained traffic to a target URL. Use this to test autoscaling and load handling.
+                </p>
+                <div class="traffic-controls">
+                    <div class="form-group">
+                        <label>Target URL</label>
+                        <input type="text" id="targetUrl" value="http://traffic-simulator.default.svc.cluster.local/api/health">
+                    </div>
+                    <div class="form-group" style="max-width:120px;">
+                        <label>RPS</label>
+                        <input type="number" id="rps" value="5" min="1" max="1000">
+                    </div>
+                    <div class="form-group" style="max-width:120px;">
+                        <label>Threads</label>
+                        <input type="number" id="threads" value="2" min="1" max="50">
+                    </div>
+                    <button class="btn btn-green" id="btnStart" onclick="startTraffic()">Start</button>
+                    <button class="btn btn-gray" id="btnStop" onclick="stopTraffic()" disabled>Stop</button>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div class="card full-width">
+                <h2>Event Log</h2>
+                <div class="log-container" id="logContainer"></div>
+                <button class="btn btn-gray btn-sm" style="margin-top:0.8rem;" onclick="clearLogs()">Clear Logs</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const logContainer = document.getElementById('logContainer');
+
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${time}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            logContainer.innerHTML = '';
+        }
+
+        async function triggerError(endpoint) {
+            log(`Triggering: ${endpoint}`, 'warn');
+            try {
+                const resp = await fetch(endpoint);
+                const data = await resp.json();
+                if (resp.ok) {
+                    log(`Response ${resp.status}: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    log(`Error ${resp.status}: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (e) {
+                log(`Request failed: ${e.message}`, 'error');
+            }
+        }
+
+        function triggerOom() {
+            const mb = document.getElementById('oomMb').value;
+            triggerError(`/api/error/oom?mb=${mb}`);
+        }
+
+        async function stressCpu() {
+            const seconds = document.getElementById('cpuSeconds').value;
+            const status = document.getElementById('cpuStatus');
+            status.textContent = `Burning CPU for ${seconds}s...`;
+            status.style.color = '#fbbf24';
+            log(`Starting CPU stress for ${seconds}s`, 'warn');
+            try {
+                const resp = await fetch(`/api/stress/cpu?seconds=${seconds}`);
+                const data = await resp.json();
+                status.textContent = `Done! ${data.iterations} iterations`;
+                status.style.color = '#4ade80';
+                log(`CPU stress complete: ${data.iterations} iterations`, 'success');
+            } catch (e) {
+                status.textContent = `Failed: ${e.message}`;
+                status.style.color = '#f87171';
+                log(`CPU stress failed: ${e.message}`, 'error');
+            }
+        }
+
+        async function startTraffic() {
+            const targetUrl = document.getElementById('targetUrl').value;
+            const rps = document.getElementById('rps').value;
+            const threads = document.getElementById('threads').value;
+
+            if (!targetUrl) {
+                log('Please enter a target URL', 'error');
+                return;
+            }
+
+            log(`Starting traffic: ${rps} rps, ${threads} threads -> ${targetUrl}`, 'info');
+            try {
+                const resp = await fetch('/api/traffic/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target_url: targetUrl, rps: parseInt(rps), threads: parseInt(threads) }),
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    log(data.message, 'success');
+                    document.getElementById('btnStart').disabled = true;
+                    document.getElementById('btnStop').disabled = false;
+                    document.getElementById('trafficIndicator').className = 'indicator on';
+                } else {
+                    log(`Failed: ${data.error}`, 'error');
+                }
+            } catch (e) {
+                log(`Failed to start: ${e.message}`, 'error');
+            }
+        }
+
+        async function stopTraffic() {
+            log('Stopping traffic...', 'info');
+            try {
+                const resp = await fetch('/api/traffic/stop', { method: 'POST' });
+                const data = await resp.json();
+                log(`Stopped. Total: ${data.stats.total_requests}, Errors: ${data.stats.errors}`, 'success');
+                document.getElementById('btnStart').disabled = false;
+                document.getElementById('btnStop').disabled = true;
+                document.getElementById('trafficIndicator').className = 'indicator off';
+            } catch (e) {
+                log(`Failed to stop: ${e.message}`, 'error');
+            }
+        }
+
+        // Poll traffic stats
+        setInterval(async () => {
+            try {
+                const resp = await fetch('/api/traffic/status');
+                const data = await resp.json();
+                document.getElementById('statTotal').textContent = data.stats.total_requests.toLocaleString();
+                document.getElementById('statSuccess').textContent = data.stats.success.toLocaleString();
+                document.getElementById('statErrors').textContent = data.stats.errors.toLocaleString();
+                document.getElementById('statRps').textContent = data.running ? data.rps : 0;
+
+                if (data.running) {
+                    document.getElementById('btnStart').disabled = true;
+                    document.getElementById('btnStop').disabled = false;
+                    document.getElementById('trafficIndicator').className = 'indicator on';
+                }
+            } catch (e) { /* ignore */ }
+        }, 1000);
+
+        // Health check
+        setInterval(async () => {
+            try {
+                const resp = await fetch('/api/health');
+                const badge = document.getElementById('appStatus');
+                if (resp.ok) {
+                    badge.textContent = 'HEALTHY';
+                    badge.className = 'status-badge status-healthy';
+                } else {
+                    badge.textContent = 'ERROR';
+                    badge.className = 'status-badge status-error';
+                }
+            } catch (e) {
+                const badge = document.getElementById('appStatus');
+                badge.textContent = 'UNREACHABLE';
+                badge.className = 'status-badge status-error';
+            }
+        }, 30000);
+
+        log('AIOps Traffic Simulator ready', 'success');
+    </script>
+</body>
+</html>
