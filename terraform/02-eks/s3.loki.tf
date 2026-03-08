@@ -7,11 +7,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "loki" {
   bucket = aws_s3_bucket.loki.id
 
   rule {
-    id     = "expire-old-logs"
+    id     = "log-lifecycle"
     status = "Enabled"
+
+    transition {
+      days          = 7
+      storage_class = "INTELLIGENT_TIERING"
+    }
 
     expiration {
       days = 30
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 7
     }
   }
 }
