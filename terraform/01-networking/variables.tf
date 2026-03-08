@@ -15,7 +15,7 @@ variable "default_tags" {
 
 variable "enable_nat_gateway" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "vpc" {
