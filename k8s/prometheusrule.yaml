@@ -1,0 +1,66 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: traffic-simulator-alerts
+  labels:
+    app: traffic-simulator
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: traffic-simulator
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_total{status=~"5..", endpoint!="/metrics"}[5m]))
+              /
+              sum(rate(http_requests_total{endpoint!="/metrics"}[5m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High 5xx error rate on traffic-simulator"
+            description: "More than 5% of requests are returning 5xx errors over the last 5 minutes."
+
+        - alert: HighLatencyP99
+          expr: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{endpoint!="/metrics"}[5m])) by (le))
+            > 5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High p99 latency on traffic-simulator"
+            description: "99th percentile latency is above 5 seconds for the last 5 minutes."
+
+        - alert: PodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{container="traffic-simulator"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "traffic-simulator pod is restart-looping"
+            description: "Container has restarted more than 3 times in the last 15 minutes."
+
+        - alert: TrafficSimulatorHighSaturation
+          expr: |
+            sum(rate(http_requests_total{pod=~"traffic-simulator.*"}[1m]))
+            / sum(rate(http_requests_total{pod=~"traffic-simulator.*"}[1h])) > 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Traffic growth above 3x hourly average"
+            description: "Current ratio: {{ $value }}x. Check for traffic spike or attack."
+
+        - alert: TrafficSimulatorThrottling
+          expr: |
+            sum(increase(http_requests_total{pod=~"traffic-simulator.*", status=~"429"}[5m])) > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Throttling (429) detected on traffic-simulator"
+            description: "HTTP 429 responses detected in the last 5 minutes."
