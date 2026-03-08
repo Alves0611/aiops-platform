@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: traffic-simulator-recording-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: traffic-simulator.recording
+      interval: 30s
+      rules:
+        - record: job:http_requests:rate5m
+          expr: sum(rate(http_requests_total{pod=~"traffic-simulator.*"}[5m]))
+
+        - record: job:http_errors_5xx:ratio5m
+          expr: |
+            sum(rate(http_requests_total{pod=~"traffic-simulator.*", status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{pod=~"traffic-simulator.*"}[5m]))
+
+        - record: job:http_request_duration:p95_5m
+          expr: |
+            histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{pod=~"traffic-simulator.*"}[5m])) by (le))
+
+        - record: job:http_request_duration:p99_5m
+          expr: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{pod=~"traffic-simulator.*"}[5m])) by (le))
