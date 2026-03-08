@@ -1,0 +1,444 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-traffic-simulator-infra
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  traffic-simulator-infra.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "title": "Pod Status",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              },
+              "mappings": [
+                { "options": { "0": { "text": "Down" }, "1": { "text": "Up" } }, "type": "value" }
+              ]
+            }
+          },
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Pod Status",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "kube_pod_status_ready{pod=~\"traffic-simulator.*\", condition=\"true\"}",
+              "legendFormat": "{{ pod }}"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 3 }
+                ]
+              }
+            }
+          },
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Restarts",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_status_restarts_total{container=\"traffic-simulator\"})",
+              "legendFormat": ""
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            }
+          },
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Replicas Ready",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "kube_deployment_status_replicas_available{deployment=\"traffic-simulator\"}",
+              "legendFormat": ""
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            }
+          },
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Desired Replicas",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "kube_deployment_spec_replicas{deployment=\"traffic-simulator\"}",
+              "legendFormat": ""
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            }
+          },
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Unavailable Replicas",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "kube_deployment_status_replicas_unavailable{deployment=\"traffic-simulator\"} or vector(0)",
+              "legendFormat": ""
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              },
+              "unit": "s"
+            }
+          },
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "title": "Uptime",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "time() - min(kube_pod_start_time{pod=~\"traffic-simulator.*\"})",
+              "legendFormat": ""
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "title": "CPU",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2,
+                "spanNulls": false,
+                "stacking": { "mode": "none" }
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "title": "CPU Usage vs Requests vs Limits",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{container=\"traffic-simulator\", namespace=\"default\"}[5m]))",
+              "legendFormat": "usage"
+            },
+            {
+              "expr": "sum(kube_pod_container_resource_requests{container=\"traffic-simulator\", resource=\"cpu\"})",
+              "legendFormat": "requests"
+            },
+            {
+              "expr": "sum(kube_pod_container_resource_limits{container=\"traffic-simulator\", resource=\"cpu\"})",
+              "legendFormat": "limits"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2,
+                "spanNulls": false,
+                "stacking": { "mode": "none" }
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "title": "CPU Throttling",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_cfs_throttled_periods_total{container=\"traffic-simulator\", namespace=\"default\"}[5m])) / sum(rate(container_cpu_cfs_periods_total{container=\"traffic-simulator\", namespace=\"default\"}[5m])) * 100",
+              "legendFormat": "throttled %"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "title": "Memory",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2,
+                "spanNulls": false,
+                "stacking": { "mode": "none" }
+              },
+              "unit": "bytes"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "title": "Memory Usage (RSS) vs Requests vs Limits",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(container_memory_rss{container=\"traffic-simulator\", namespace=\"default\"})",
+              "legendFormat": "RSS"
+            },
+            {
+              "expr": "sum(container_memory_working_set_bytes{container=\"traffic-simulator\", namespace=\"default\"})",
+              "legendFormat": "working set"
+            },
+            {
+              "expr": "sum(kube_pod_container_resource_requests{container=\"traffic-simulator\", resource=\"memory\"})",
+              "legendFormat": "requests"
+            },
+            {
+              "expr": "sum(kube_pod_container_resource_limits{container=\"traffic-simulator\", resource=\"memory\"})",
+              "legendFormat": "limits"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 70 },
+                  { "color": "red", "value": 90 }
+                ]
+              },
+              "unit": "percent",
+              "max": 100
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"] },
+            "orientation": "horizontal",
+            "showThresholdLabels": false
+          },
+          "title": "Memory Usage % of Limit",
+          "type": "gauge",
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{container=\"traffic-simulator\", namespace=\"default\"}) / sum(kube_pod_container_resource_limits{container=\"traffic-simulator\", resource=\"memory\"}) * 100",
+              "legendFormat": "memory usage"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+          "title": "Network",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2,
+                "spanNulls": false,
+                "stacking": { "mode": "none" }
+              },
+              "unit": "Bps"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "title": "Network I/O",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(container_network_receive_bytes_total{pod=~\"traffic-simulator.*\", namespace=\"default\"}[5m]))",
+              "legendFormat": "received"
+            },
+            {
+              "expr": "sum(rate(container_network_transmit_bytes_total{pod=~\"traffic-simulator.*\", namespace=\"default\"}[5m]))",
+              "legendFormat": "transmitted"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2,
+                "spanNulls": false,
+                "stacking": { "mode": "none" }
+              },
+              "unit": "pps"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "title": "Network Errors & Drops",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(container_network_receive_errors_total{pod=~\"traffic-simulator.*\", namespace=\"default\"}[5m]))",
+              "legendFormat": "rx errors"
+            },
+            {
+              "expr": "sum(rate(container_network_transmit_errors_total{pod=~\"traffic-simulator.*\", namespace=\"default\"}[5m]))",
+              "legendFormat": "tx errors"
+            },
+            {
+              "expr": "sum(rate(container_network_receive_packets_dropped_total{pod=~\"traffic-simulator.*\", namespace=\"default\"}[5m]))",
+              "legendFormat": "rx drops"
+            },
+            {
+              "expr": "sum(rate(container_network_transmit_packets_dropped_total{pod=~\"traffic-simulator.*\", namespace=\"default\"}[5m]))",
+              "legendFormat": "tx drops"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+          "title": "Restart History",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "fillOpacity": 30,
+                "lineWidth": 2,
+                "spanNulls": false,
+                "stacking": { "mode": "none" },
+                "drawStyle": "bars"
+              }
+            }
+          },
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 33 },
+          "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "title": "Pod Restarts (increase over 15m)",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "increase(kube_pod_container_status_restarts_total{container=\"traffic-simulator\"}[15m])",
+              "legendFormat": "{{ pod }}"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 39,
+      "tags": ["traffic-simulator", "infrastructure", "use"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Traffic Simulator - Infrastructure",
+      "uid": "traffic-simulator-infra"
+    }
