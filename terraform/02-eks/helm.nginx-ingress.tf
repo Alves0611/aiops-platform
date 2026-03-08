@@ -26,7 +26,38 @@ resource "helm_release" "nginx_ingress" {
     value = "true"
   }
 
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-ssl-cert"
+    value = aws_acm_certificate.this.arn
+  }
+
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-ssl-ports"
+    value = "https"
+  }
+
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-protocol"
+    value = "tcp"
+  }
+
+  set {
+    name  = "controller.service.targetPort.https"
+    value = "http"
+  }
+
+  set {
+    name  = "controller.config.use-forwarded-headers"
+    value = "true"
+  }
+
+  set {
+    name  = "controller.config.proxy-real-ip-cidr"
+    value = "0.0.0.0/0"
+  }
+
   depends_on = [
+    aws_acm_certificate_validation.this,
     aws_eks_cluster.this,
     aws_eks_node_group.this,
     aws_eks_access_entry.admin,
