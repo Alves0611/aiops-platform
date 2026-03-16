@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: aiops-platform
+  description: Production-ready Kubernetes observability platform on AWS EKS with Prometheus, Grafana, and Loki
+  annotations:
+    github.com/project-slug: Alves0611/aiops-platform
+  tags:
+    - terraform
+    - kubernetes
+    - observability
+    - aws
+spec:
+  type: infrastructure
+  lifecycle: production
+  owner: user:default/Alves0611
+  system: observability
