@@ -5,6 +5,7 @@ metadata:
   description: Production-ready Kubernetes observability platform on AWS EKS with Prometheus, Grafana, and Loki
   annotations:
     github.com/project-slug: Alves0611/aiops-platform
+    backstage.io/techdocs-ref: dir:.
   tags:
     - terraform
     - kubernetes

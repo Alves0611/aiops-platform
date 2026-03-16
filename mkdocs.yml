@@ -1,0 +1,8 @@
+site_name: AIOps Platform
+site_description: Production-ready Kubernetes observability platform on AWS EKS
+
+nav:
+  - Home: index.md
+
+plugins:
+  - techdocs-core
