@@ -2,7 +2,8 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: aiops-platform
-  description: Production-ready Kubernetes observability platform on AWS EKS with Prometheus, Grafana, and Loki
+  title: Plataforma AIOps
+  description: Stack de observabilidade no EKS com Prometheus, Grafana e Loki, construída por agentes de IA.
   annotations:
     github.com/project-slug: Alves0611/aiops-platform
     backstage.io/techdocs-ref: dir:.
@@ -12,7 +13,7 @@ metadata:
     - observability
     - aws
 spec:
-  type: infrastructure
+  type: iac-module
   lifecycle: production
-  owner: user:default/Alves0611
+  owner: user:alves0611
   system: observability
